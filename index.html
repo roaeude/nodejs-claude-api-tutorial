@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>怎么调用Claude API？国内接入、流式输出与代码教程</title>
+  <meta name="description" content="Node.js怎么调用Claude API？本文介绍Claude API国内调用的环境变量配置、请求地址填写、TypeScript与Node.js调用示例、流式输出、多轮对话和常见报错处理，帮助开发者快速接入Claude中转API。">
+  <meta name="keywords" content="Node.js调用Claude, Claude API调用, Claude API国内调用, JavaScript调用Claude API, TypeScript调用Claude, Claude中转API, Claude中转站, Claude国内接入, Claude流式输出, Claude接口调用, Claude API教程, Claude后端接入">
+  <meta name="author" content="作者名称">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://quanzil.com/articles/how-to-call-gpt-api-in-china.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="ai api">
+  <meta property="og:title" content="怎么调用Claude API？国内接入、流式输出与代码教程">
+  <meta property="og:description" content="Node.js怎么调用Claude API？本文介绍Claude API国内调用的环境变量配置、请求地址填写、TypeScript与Node.js调用示例、流式输出、多轮对话和常见报错处理，帮助开发者快速接入Claude中转API。">
+  <meta property="og:url" content="https://quanzil.com/articles/how-to-call-gpt-api-in-china.html">
+  <meta property="og:image" content="https://quanzil.com/images/article-cover.jpg">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="怎么调用Claude API？国内接入、流式输出与代码教程">
+  <meta name="twitter:description" content="Node.js怎么调用Claude API？本文介绍Claude API国内调用的环境变量配置、请求地址填写、TypeScript与Node.js调用示例、流式输出、多轮对话和常见报错处理，帮助开发者快速接入Claude中转API。">
+  <meta name="twitter:image" content="https://quanzil.com/images/article-cover.jpg">
+
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --surface: #fff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --code-bg: #111827;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.8;
+    }
+    a { color: var(--accent); }
+    .site-header {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.97);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .header-inner, .page, .site-footer {
+      width: min(100% - 32px, 1100px);
+      margin: 0 auto;
+    }
+    .header-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: max-content;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, .2);
+    }
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .brand {
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .brand-tagline {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: 22px;
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 11px;
+      border-radius: 7px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: color .2s ease, background .2s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+    .page { padding: 56px 0 72px; }
+    .article {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(24px, 5vw, 64px);
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .04);
+    }
+    .article-header { margin-bottom: 40px; }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    h1 {
+      margin: 0 0 16px;
+      color: #111827;
+      font-size: clamp(30px, 5vw, 46px);
+      line-height: 1.25;
+      letter-spacing: -.02em;
+    }
+    .summary {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-target {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, .18);
+      transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .header-target:hover {
+      background: #1d4ed8;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(37, 99, 235, .25);
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .markdown-body { font-size: 17px; }
+    .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+      margin: 2em 0 .7em;
+      color: #111827;
+      line-height: 1.35;
+    }
+    .markdown-body h2 {
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: 28px;
+    }
+    .markdown-body h3 { font-size: 22px; }
+    .markdown-body p, .markdown-body ul, .markdown-body ol, .markdown-body blockquote { margin: 1em 0; }
+    .markdown-body img { max-width: 100%; height: auto; border-radius: 8px; }
+    .markdown-body blockquote {
+      margin-left: 0;
+      padding: 12px 18px;
+      border-left: 3px solid var(--accent);
+      background: var(--accent-light);
+      color: #374151;
+    }
+    .markdown-body code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #f3f4f6;
+      font-size: .9em;
+    }
+    .markdown-body pre {
+      overflow-x: auto;
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--code-bg);
+      color: #e5e7eb;
+      line-height: 1.6;
+    }
+    .markdown-body pre code { padding: 0; background: transparent; color: inherit; }
+    .markdown-body table { display: block; overflow-x: auto; border-collapse: collapse; width: 100%; }
+    .markdown-body th, .markdown-body td { padding: 9px 12px; border: 1px solid var(--line); text-align: left; }
+    .markdown-body th { background: #f9fafb; }
+    .site-footer { padding: 24px 0 48px; color: var(--muted); font-size: 13px; text-align: center; }
+    @media (max-width: 640px) {
+      .header-inner { min-height: 56px; }
+      .brand-tagline, .main-nav { display: none; }
+      .page { padding: 24px 0 40px; }
+      .article { padding: 22px 18px; }
+      .markdown-body { font-size: 16px; }
+      .header-actions { gap: 10px; }
+      .header-target { padding: 8px 11px; font-size: 13px; }
+      .brand-mark { width: 31px; height: 31px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a id="site-brand" class="brand-wrap" href="https://quanzil.com/" aria-label="返回网站首页">
+        <span id="brand-mark" class="brand-mark">AI</span>
+        <span class="brand-copy">
+          <span id="brand-name" class="brand">API</span>
+          <span id="brand-tagline" class="brand-tagline">让技术更简单</span>
+        </span>
+      </a>
+      <nav class="main-nav" aria-label="主导航">
+        <a id="nav-home" class="nav-link active" href="https://quanzil.com/">首页</a>
+        <a id="nav-articles" class="nav-link" href="https://quanzil.com/pricing">模型价格</a>
+        <a id="nav-docs" class="nav-link" href="https://docs.quanzil.com/">API 文档</a>
+        <a id="nav-pricing" class="nav-link" href="https://quanzil.com/news/focus">文章资讯</a>
+      </nav>
+      <div class="header-actions">
+        <a id="header-target" class="header-target" href="https://quanzil.com/" target="_blank" rel="noopener noreferrer">进入 API 中转站 →</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <article class="article" itemscope itemtype="https://schema.org/Article">
+      <header class="article-header">
+        <p class="eyebrow">原创文章</p>
+        <h1 id="article-title" itemprop="headline">怎么调用Claude API？国内接入、流式输出与代码教程</h1>
+        <p id="article-summary" class="summary" itemprop="description">Node.js怎么调用Claude API？本文介绍Claude API国内调用的环境变量配置、请求地址填写、TypeScript与Node.js调用示例、流式输出、多轮对话和常见报错处理，帮助开发者快速接入Claude中转API。</p>
+        <div class="meta">
+          <span>作者：<span id="article-author" itemprop="author">ai agent</span></span>
+          <span>发布时间：<time id="publish-date" itemprop="datePublished" datetime="2026-09-18">2026年09月18日</time></span>
+          <span>更新时间：<time id="update-date" itemprop="dateModified"></time></span>
+        </div>
+      </header>
+
+      <!-- 👇 Python 会直接将转好的 HTML 注入到这个 div 中 -->
+      <div id="markdown-content" class="markdown-body" itemprop="articleBody">
+<p>如果你在用 Node.js、Express、NestJS 或 Next.js 服务端开发项目，准备接入 Claude，最关心的问题通常是：</p>
+<p><strong>Node.js 到底怎么调用 Claude API？</strong></p>
+<p>实际接入时，开发者经常会卡在这几步：</p>
+<ul>
+<li>应该把 Claude API Key 放在前端还是后端？</li>
+<li>请求地址和模型名称怎么配置？</li>
+<li>怎么用 Node.js 发送第一个 Claude 请求？</li>
+<li>怎么接收流式输出，并把结果传给网页？</li>
+<li>出现 <code>401</code>、<code>404</code>、<code>429</code> 或连接失败时，应该先检查什么？</li>
+</ul>
+<p>本文围绕 <strong>Claude API 国内调用</strong>和 <strong>Node.js 调用 Claude API</strong> 展开，介绍从配置到上线前需要注意的关键步骤。</p>
+<p>文中的代码运行在 <strong>Node.js 18 及以上版本的服务端环境</strong>中，默认演示 <strong>OpenAI 兼容格式的 Claude 接口</strong>。如果所用服务只支持 Claude 原生 <code>/v1/messages</code> 接口，需要按对应请求结构调整。</p>
+<p><strong>Claude API 中转服务入口：</strong></p>
+<blockquote>
+<p><a href="https://quanzil.com">https://quanzil.com</a></p>
+<p><a href="https://quanzil.net">https://quanzil.net</a></p>
+</blockquote>
+<p>实际接口地址、支持的 Claude 模型、接口格式和计费规则，请以平台控制台及开发文档为准。</p>
+<hr />
+<h2>Node.js调用Claude API，为什么应该放在后端？</h2>
+<p>有些开发者刚拿到 Claude API Key，会尝试直接在浏览器 JavaScript 中发起请求。</p>
+<p>这种做法存在明显问题：浏览器代码和网络请求都可以被用户查看，密钥一旦暴露，就可能被他人盗用，导致额度被消耗。</p>
+<p>更稳妥的结构是：</p>
+<pre><code class="language-text">网页或小程序 → 你的Node.js后端 → Claude中转API → 返回结果
+</code></pre>
+<p>把 Claude API 调用放在 Node.js 后端，可以同时解决几个问题：</p>
+<ul>
+<li>API Key 保存在服务器环境变量中，不下发到浏览器。</li>
+<li>后端可以先验证用户登录状态和使用权限。</li>
+<li>可以限制单次输入长度和请求频率。</li>
+<li>可以统一记录耗时、状态码和 Token 用量。</li>
+<li>后续更换 Claude 模型或接口地址时，不需要修改前端代码。</li>
+</ul>
+<p>即使使用 Next.js、Nuxt 等全栈框架，也应将密钥放在服务端环境变量中，不要使用会暴露给浏览器的公开变量前缀。</p>
+<hr />
+<h2>调用前需要准备哪三项配置？</h2>
+<p>在编写 Node.js 代码前，先从同一个服务平台获取以下信息：</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>环境变量名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API Key</td>
+<td><code>CLAUDE_API_KEY</code></td>
+<td>用于接口鉴权的密钥</td>
+</tr>
+<tr>
+<td>Base URL</td>
+<td><code>CLAUDE_BASE_URL</code></td>
+<td>接口基础地址，通常包含<code>/v1</code></td>
+</tr>
+<tr>
+<td>模型名称</td>
+<td><code>CLAUDE_MODEL</code></td>
+<td>平台模型列表中的准确Claude标识</td>
+</tr>
+</tbody>
+</table>
+<p>这三项配置必须相互匹配。</p>
+<p>macOS 或 Linux 可以在终端设置：</p>
+<pre><code class="language-bash">export CLAUDE_API_KEY=&quot;替换为你的API_Key&quot;
+export CLAUDE_BASE_URL=&quot;https://你的接口域名/v1&quot;
+export CLAUDE_MODEL=&quot;替换为平台支持的Claude模型名称&quot;
+</code></pre>
+<p>Windows PowerShell 可以设置：</p>
+<pre><code class="language-powershell">$env:CLAUDE_API_KEY=&quot;替换为你的API_Key&quot;
+$env:CLAUDE_BASE_URL=&quot;https://你的接口域名/v1&quot;
+$env:CLAUDE_MODEL=&quot;替换为平台支持的Claude模型名称&quot;
+</code></pre>
+<p>以上内容都是占位值，运行前需要替换成真实配置。</p>
+<p>如果使用 <code>.env</code> 文件保存本地配置，应把 <code>.env</code> 加入 <code>.gitignore</code>，避免提交到代码仓库。</p>
+<p>接口文档可以查看：</p>
+<ul>
+<li><a href="/docs.html">Claude API接入开发文档</a></li>
+</ul>
+<hr />
+<h2>方法一：使用Node.js内置fetch调用Claude API</h2>
+<p>Node.js 18 及以上版本已经内置 <code>fetch</code>。在不安装额外 SDK 的情况下，可以先发送一个最小请求，确认地址、密钥和模型是否可用。</p>
+<p>新建 <code>claude-fetch.mjs</code>：</p>
+<pre><code class="language-javascript">const baseUrl = process.env.CLAUDE_BASE_URL?.replace(/\/+$/, &quot;&quot;);
+const apiKey = process.env.CLAUDE_API_KEY;
+const model = process.env.CLAUDE_MODEL;
+
+if (!baseUrl || !apiKey || !model) {
+  throw new Error(&quot;请先设置 CLAUDE_BASE_URL、CLAUDE_API_KEY 和 CLAUDE_MODEL&quot;);
+}
+
+const response = await fetch(`${baseUrl}/chat/completions`, {
+  method: &quot;POST&quot;,
+  headers: {
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
+    Authorization: `Bearer ${apiKey}`,
+  },
+  body: JSON.stringify({
+    model,
+    messages: [
+      {
+        role: &quot;system&quot;,
+        content: &quot;请使用简洁、准确的中文回答。&quot;,
+      },
+      {
+        role: &quot;user&quot;,
+        content: &quot;请用三句话说明Node.js接入Claude API的基本流程。&quot;,
+      },
+    ],
+    max_tokens: 400,
+  }),
+  signal: AbortSignal.timeout(60_000),
+});
+
+if (!response.ok) {
+  const errorText = await response.text();
+  throw new Error(`HTTP ${response.status}: ${errorText}`);
+}
+
+const data = await response.json();
+console.log(&quot;Claude回答：&quot;);
+console.log(data.choices?.[0]?.message?.content ?? &quot;&quot;);
+console.log(&quot;Token用量：&quot;, data.usage ?? {});
+</code></pre>
+<p>运行：</p>
+<pre><code class="language-bash">node claude-fetch.mjs
+</code></pre>
+<p>这段代码会向 <code>${baseUrl}/chat/completions</code> 发送请求，并设置 60 秒超时。</p>
+<p>如果终端打印出回答和 <code>usage</code> 信息，说明当前环境已经可以完成基础的 <strong>Claude API 调用</strong>。</p>
+<hr />
+<h2>方法二：使用OpenAI Node SDK调用Claude接口</h2>
+<p>如果所选 Claude 中转站支持 OpenAI 兼容接口，也可以使用官方 <code>openai</code> Node SDK 来管理请求、超时和流式输出。</p>
+<p>安装依赖：</p>
+<pre><code class="language-bash">npm install openai
+</code></pre>
+<p>新建 <code>claude-sdk.mjs</code>：</p>
+<pre><code class="language-javascript">import OpenAI from &quot;openai&quot;;
+
+const client = new OpenAI({
+  apiKey: process.env.CLAUDE_API_KEY,
+  baseURL: process.env.CLAUDE_BASE_URL?.replace(/\/+$/, &quot;&quot;),
+  timeout: 60_000,
+  maxRetries: 2,
+});
+
+const completion = await client.chat.completions.create({
+  model: process.env.CLAUDE_MODEL,
+  messages: [
+    {
+      role: &quot;user&quot;,
+      content: &quot;请列出Claude适合处理的五类常见开发任务。&quot;,
+    },
+  ],
+  max_tokens: 500,
+});
+
+console.log(completion.choices[0]?.message?.content ?? &quot;&quot;);
+</code></pre>
+<p>这里需要注意两点：</p>
+<ul>
+<li><code>baseURL</code> 一般填写到 <code>/v1</code>，SDK 会自动拼接 <code>/chat/completions</code>。</li>
+<li>虽然安装了 <code>openai</code> 包，实际调用哪个模型仍由 <code>baseURL</code> 和 <code>model</code> 决定。</li>
+</ul>
+<p>如果把完整接口地址 <code>/v1/chat/completions</code> 填进 <code>baseURL</code>，通常会出现路径重复，导致返回 <code>404</code>。</p>
+<hr />
+<h2>如果平台使用Claude原生接口，Node.js请求有什么不同？</h2>
+<p>有些平台提供的是 Claude 原生 Messages 接口，常见路径是 <code>/v1/messages</code>。</p>
+<p>它与兼容格式的主要区别如下：</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>OpenAI兼容格式</th>
+<th>Claude原生Messages格式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常见路径</td>
+<td><code>/v1/chat/completions</code></td>
+<td><code>/v1/messages</code></td>
+</tr>
+<tr>
+<td>常见鉴权头</td>
+<td><code>Authorization: Bearer</code></td>
+<td><code>x-api-key</code></td>
+</tr>
+<tr>
+<td>版本请求头</td>
+<td>一般不需要</td>
+<td>常见为<code>anthropic-version</code></td>
+</tr>
+<tr>
+<td>系统提示词</td>
+<td><code>messages</code>中的<code>system</code>角色</td>
+<td>顶层<code>system</code>字段</td>
+</tr>
+<tr>
+<td>回答读取方式</td>
+<td><code>choices[0].message.content</code></td>
+<td><code>content</code>数组中的文本块</td>
+</tr>
+</tbody>
+</table>
+<p>如果平台要求使用原生格式，可以用下面的 <code>fetch</code> 结构测试：</p>
+<pre><code class="language-javascript">const response = await fetch(`${baseUrl}/messages`, {
+  method: &quot;POST&quot;,
+  headers: {
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
+    &quot;x-api-key&quot;: apiKey,
+    &quot;anthropic-version&quot;: &quot;2023-06-01&quot;,
+  },
+  body: JSON.stringify({
+    model,
+    max_tokens: 400,
+    system: &quot;请使用简洁中文回答。&quot;,
+    messages: [
+      {
+        role: &quot;user&quot;,
+        content: &quot;请解释Claude原生Messages接口的核心字段。&quot;,
+      },
+    ],
+  }),
+});
+
+const data = await response.json();
+const answer = (data.content ?? [])
+  .filter((block) =&gt; block.type === &quot;text&quot;)
+  .map((block) =&gt; block.text)
+  .join(&quot;&quot;);
+
+console.log(answer);
+</code></pre>
+<p>部分中转平台即使提供 <code>/v1/messages</code>，鉴权头或版本号要求也可能略有差异，应以所用平台的开发文档为准。</p>
+<hr />
+<h2>Node.js怎么接收Claude流式输出？</h2>
+<p>在聊天窗口、代码助手或长文生成场景中，流式输出可以让内容边生成边显示，减少用户等待首屏内容的感知时间。</p>
+<p>兼容格式下的 Node.js 流式调用示例如下：</p>
+<pre><code class="language-javascript">import OpenAI from &quot;openai&quot;;
+
+const client = new OpenAI({
+  apiKey: process.env.CLAUDE_API_KEY,
+  baseURL: process.env.CLAUDE_BASE_URL?.replace(/\/+$/, &quot;&quot;),
+  timeout: 60_000,
+});
+
+const stream = await client.chat.completions.create({
+  model: process.env.CLAUDE_MODEL,
+  messages: [
+    {
+      role: &quot;user&quot;,
+      content: &quot;请分步骤说明如何用Node.js搭建Claude问答接口。&quot;,
+    },
+  ],
+  max_tokens: 800,
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  const delta = chunk.choices?.[0]?.delta?.content;
+  if (delta) {
+    process.stdout.write(delta);
+  }
+}
+
+process.stdout.write(&quot;\n&quot;);
+</code></pre>
+<p>实际接入网页时，通常是：</p>
+<ol>
+<li>浏览器请求你的 Node.js 接口。</li>
+<li>Node.js 后端向 Claude 接口发起 <code>stream: true</code> 请求。</li>
+<li>后端将收到的文本片段通过 SSE 或流式响应转发给前端。</li>
+</ol>
+<p>注意，流式输出主要改善展示体验，并不代表相同输入和输出的 Token 费用会自动降低。</p>
+<hr />
+<h2>多轮对话在Node.js服务中怎么管理？</h2>
+<p>Claude 接口本身不会自动替你的业务保存每个用户的聊天记录。要实现连续对话，后端需要把相关的历史消息一起传给模型。</p>
+<p>可以用一个精简数组控制上下文长度：</p>
+<pre><code class="language-javascript">function buildMessages(systemPrompt, history, userInput, maxTurns = 6) {
+  const recentMessages = history.slice(-maxTurns * 2);
+
+  return [
+    { role: &quot;system&quot;, content: systemPrompt },
+    ...recentMessages,
+    { role: &quot;user&quot;, content: userInput },
+  ];
+}
+</code></pre>
+<p>这里的 <code>history</code> 只保存当前用户会话中需要保留的 <code>user</code> 和 <code>assistant</code> 消息。</p>
+<p>这样做有两个好处：</p>
+<ul>
+<li>防止不同用户的上下文混在一起。</li>
+<li>避免历史消息无限增长，导致输入 Token 和响应时间持续增加。</li>
+</ul>
+<p>如果业务需要长期记忆，可以把早期对话总结成简短摘要，再和最近几轮对话一起发送。</p>
+<p>价格与 Token 成本计算可以参考：</p>
+<ul>
+<li><a href="/pricing.html">Claude API调用价格说明</a></li>
+<li><a href="/blog/claude-api/claude-api-pricing-cost-guide.html">Claude API国内调用多少钱？计费方式、费用估算与省钱指南</a></li>
+</ul>
+<hr />
+<h2>Node.js调用Claude API常见报错怎么排查？</h2>
+<table>
+<thead>
+<tr>
+<th>报错或现象</th>
+<th>常见原因</th>
+<th>排查重点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>API Key错误、失效，或鉴权头不匹配</td>
+<td>检查Key、Base URL和请求头格式</td>
+</tr>
+<tr>
+<td><code>404 Not Found</code></td>
+<td><code>/v1</code>重复、路径写错，或模型名不存在</td>
+<td>打印最终请求URL并核对模型列表</td>
+</tr>
+<tr>
+<td><code>400 Bad Request</code></td>
+<td>请求体字段不合法，或混用两种接口格式</td>
+<td>检查<code>model</code>、<code>messages</code>、<code>max_tokens</code></td>
+</tr>
+<tr>
+<td><code>429 Too Many Requests</code></td>
+<td>并发过高、触发限流，或账户额度不足</td>
+<td>查看响应正文，区分限流与余额问题</td>
+</tr>
+<tr>
+<td><code>fetch failed</code> / 超时</td>
+<td>域名填错、网络不通，或长文本耗时较久</td>
+<td>先用短请求测试，再调整超时和网络配置</td>
+</tr>
+</tbody>
+</table>
+<p>排查时，建议先看三件事：</p>
+<ol>
+<li><strong>最终请求的完整 URL 是什么。</strong> 很多 <code>404</code> 都是因为 <code>/v1/v1</code> 或重复拼接路径。</li>
+<li><strong>错误响应正文写了什么。</strong> 不要只看状态码，<code>400</code> 和 <code>429</code> 的具体原因通常在响应体里。</li>
+<li><strong>最小请求能否成功。</strong> 先用一句话测试，排除业务代码、长文本和复杂参数的影响。</li>
+</ol>
+<p>调试日志中可以记录状态码、耗时和请求 ID，但不要把完整的 <code>CLAUDE_API_KEY</code> 打印到控制台或日志系统里。</p>
+<hr />
+<h2>Node.js接入Claude API常见问题</h2>
+<h3>前端React或Vue项目可以直接调用Claude API吗？</h3>
+<p>不建议直接从浏览器调用。React、Vue 或小程序前端应先请求你自己的 Node.js 后端接口，由后端携带 API Key 调用 Claude，再把结果返回给前端。</p>
+<h3>TypeScript项目怎么调用Claude API？</h3>
+<p>本文的代码同样适用于 TypeScript。使用 <code>openai</code> Node SDK 时，包内自带类型定义；使用 <code>fetch</code> 时，可以为请求体和返回结构定义接口类型，编译或运行前确保环境变量已正确加载。</p>
+<h3>为什么本地终端能跑通，部署到服务器后却报错？</h3>
+<p>常见原因是服务器、Docker 容器或 PM2 进程中没有注入 <code>CLAUDE_API_KEY</code>、<code>CLAUDE_BASE_URL</code> 和 <code>CLAUDE_MODEL</code>，或者服务器网络环境、超时设置与本地不同。可以先在部署环境中检查环境变量是否生效。</p>
+<h3>切换不同Claude模型时，Node.js代码要重写吗？</h3>
+<p>在同一个兼容接口下，基础文本问答通常只需要修改 <code>CLAUDE_MODEL</code> 环境变量。切换后仍建议用真实业务样本测试输出长度、响应速度和费用变化。</p>
+<hr />
+<h2>从一个最小Node.js脚本开始接入Claude</h2>
+<p>如果你准备在 Node.js 项目中进行 Claude API 国内调用，可以按下面的顺序推进：</p>
+<ol>
+<li>获取同一平台的 API Key、Base URL 和 Claude 模型名称。</li>
+<li>在服务端设置环境变量，不在前端暴露密钥。</li>
+<li>先用 <code>claude-fetch.mjs</code> 跑通最小请求。</li>
+<li>根据业务需要接入 SDK、流式输出和多轮对话裁剪。</li>
+<li>增加超时控制、错误日志和用量统计后，再接入正式流量。</li>
+</ol>
+<p><strong>Claude API 中转服务入口：</strong></p>
+<blockquote>
+<p><a href="https://quanzil.com">https://quanzil.com</a></p>
+<p><a href="https://quanzil.net">https://quanzil.net</a></p>
+</blockquote>
+</div>
+
+      <!-- 👇 Python 会识别并删除这个占位符，保持输出页面干净 -->
+      
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div>© <span id="current-year"></span> 保留所有权利</div>
+  </footer>
+
+  <script>
+    // Python 会替换这里的内容
+    const articleConfig = {
+  "title": "怎么调用Claude API？国内接入、流式输出与代码教程",
+  "summary": "Node.js怎么调用Claude API？本文介绍Claude API国内调用的环境变量配置、请求地址填写、TypeScript与Node.js调用示例、流式输出、多轮对话和常见报错处理，帮助开发者快速接入Claude中转API。",
+  "author": "ai agent",
+  "published": "2026-10-15 00:00:00",
+  "canonical": "https://quanzil.com/articles/how-to-call-gpt-api-in-china.html",
+  "targetUrl": "https://quanzil.com/",
+  "targetLabel": "进入 API 中转站 →",
+  "siteName": "API ",
+  "siteTagline": "让技术更简单",
+  "brandMark": "AI",
+  "homeUrl": "https://quanzil.com/",
+  "articlesUrl": "https://quanzil.com/pricing",
+  "docsUrl": "https://docs.quanzil.com/",
+  "pricingUrl": "https://quanzil.com/news/focus"
+};
+
+    const formatDate = value => new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date(value));
+
+    // 填充顶部和导航信息
+    document.title = `${articleConfig.title}｜网站名称`;
+    document.getElementById('site-brand').href = articleConfig.homeUrl;
+    document.getElementById('brand-name').textContent = articleConfig.siteName;
+    document.getElementById('brand-tagline').textContent = articleConfig.siteTagline;
+    document.getElementById('brand-mark').textContent = articleConfig.brandMark;
+    document.getElementById('nav-home').href = articleConfig.homeUrl;
+    document.getElementById('nav-articles').href = articleConfig.articlesUrl;
+    document.getElementById('nav-docs').href = articleConfig.docsUrl;
+    document.getElementById('nav-pricing').href = articleConfig.pricingUrl;
+
+    // 填充文章 Meta 数据
+    document.getElementById('article-title').textContent = articleConfig.title;
+    document.getElementById('article-summary').textContent = articleConfig.summary;
+    document.getElementById('article-author').textContent = articleConfig.author;
+    const headerTarget = document.getElementById('header-target');
+    headerTarget.href = articleConfig.targetUrl;
+    headerTarget.textContent = articleConfig.targetLabel;
+
+    document.getElementById('publish-date').textContent = formatDate(articleConfig.published);
+    document.getElementById('publish-date').dateTime = articleConfig.published;
+
+    const updated = new Date();
+    const updateDate = updated.toISOString().slice(0, 10);
+    document.getElementById('update-date').textContent = formatDate(updateDate);
+    document.getElementById('update-date').dateTime = updateDate;
+    document.getElementById('current-year').textContent = updated.getFullYear();
+
+    // 构建结构化数据 (对百度/Google SEO 极其重要)
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: articleConfig.title,
+      description: articleConfig.summary,
+      author: { '@type': 'Person', name: articleConfig.author },
+      datePublished: articleConfig.published,
+      dateModified: updateDate,
+      mainEntityOfPage: { '@type': 'WebPage', '@id': articleConfig.canonical }
+    };
+    const schemaScript = document.createElement('script');
+    schemaScript.type = 'application/ld+json';
+    schemaScript.textContent = JSON.stringify(schema);
+    document.head.appendChild(schemaScript);
+  </script>
+</body>
+</html>
